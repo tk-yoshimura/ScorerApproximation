@@ -5,11 +5,7 @@ namespace BarnesGApproximation {
         public readonly int Value => checked(default(N).Value + 2);
     }
 
-    internal struct Plus4<N> : IConstant where N : struct, IConstant {
-        public readonly int Value => checked(default(N).Value + 4);
-    }
-
-    internal struct Plus8<N> : IConstant where N : struct, IConstant {
-        public readonly int Value => checked(default(N).Value + 8);
+    internal struct Plus40<N> : IConstant where N : struct, IConstant {
+        public readonly int Value => checked(default(N).Value + 40);
     }
 }

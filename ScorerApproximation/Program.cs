@@ -3,10 +3,10 @@
 namespace ScorerApproximation {
     internal class Program {
         static void Main() {
-            double x = -112.5;
-            MultiPrecision<Pow2.N32> ydec = ScorerN32.Hi(MultiPrecision<Pow2.N32>.BitDecrement(x));
-            MultiPrecision<Pow2.N32> y = ScorerN32.Hi(x);
-            MultiPrecision<Pow2.N32> yinc = ScorerN32.Hi(MultiPrecision<Pow2.N32>.BitIncrement(x));
+            double x = 113;
+            MultiPrecision<Pow2.N32> ydec = ScorerN32.Gi(MultiPrecision<Pow2.N32>.BitDecrement(x));
+            MultiPrecision<Pow2.N32> y = ScorerN32.Gi(x);
+            MultiPrecision<Pow2.N32> yinc = ScorerN32.Gi(MultiPrecision<Pow2.N32>.BitIncrement(x));
 
             Console.WriteLine(ydec);
             Console.WriteLine(y);
