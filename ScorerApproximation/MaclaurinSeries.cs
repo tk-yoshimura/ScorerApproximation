@@ -11,7 +11,7 @@ namespace ScorerApproximation {
         public static MultiPrecision<N> Value(int n) {
             if (n >= table.Count) {
                 for (int k = table.Count; k <= n; k++) {
-                    MultiPrecision<N> c = table[k - 3] * MultiPrecision<N>.Div(3, checked(k * (k - 1) * (k - 2)));
+                    MultiPrecision<N> c = table[k - 3] * MultiPrecision<N>.Div(3, checked((long)k * (k - 1) * (k - 2)));
                     table.Add(c);
                 }
             }
