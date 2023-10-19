@@ -8,12 +8,18 @@ namespace ScorerApproximation {
             MultiPrecision<N> x3 = x * x * x;
             MultiPrecision<N> s = 0, u = C;
 
-            for (int k = 0; k <= max_terms; k += 3) {
+            for (int k = 0, convergence_times = 0; k <= max_terms; k += 3) {
                 MultiPrecision<N> ds = u * (NearZeroCoef(k) + x * (NearZeroCoef(k + 1) + x * NearZeroCoef(k + 2)));
                 s += ds;
 
                 if (ds.Exponent <= s.Exponent - MultiPrecision<N>.Bits) {
-                    return s;
+                    convergence_times++;
+                    if (convergence_times >= 3) {
+                        return s;
+                    }
+                }
+                else {
+                    convergence_times = 0;
                 }
 
                 u *= x3;
@@ -30,12 +36,18 @@ namespace ScorerApproximation {
             MultiPrecision<N> v3 = 1 / (x * x * x);
             MultiPrecision<N> s = 0, u = 1 / (MultiPrecision<N>.PI * x);
 
-            for (int k = 0; k <= max_terms; k++) {
+            for (int k = 0, convergence_times = 0; k <= max_terms; k++) {
                 MultiPrecision<N> ds = u * AsymptoticSeries<N>.Value(k);
                 s += ds;
 
                 if (ds.Exponent <= s.Exponent - MultiPrecision<N>.Bits) {
-                    return s;
+                    convergence_times++;
+                    if (convergence_times >= 3) {
+                        return s;
+                    }
+                }
+                else {
+                    convergence_times = 0;
                 }
 
                 u *= v3;
