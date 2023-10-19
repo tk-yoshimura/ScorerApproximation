@@ -5,17 +5,18 @@ namespace ScorerApproximation {
         public static readonly MultiPrecision<N> C = 1 / (MultiPrecision<N>.Square(MultiPrecision<N>.Cbrt(3)) * MultiPrecision<N>.PI);
 
         public static MultiPrecision<N> NearZero(MultiPrecision<N> x, int max_terms = 1024) {
+            MultiPrecision<N> x3 = x * x * x;
             MultiPrecision<N> s = 0, u = C;
 
-            for (int k = 0; k <= max_terms; k++) {
-                MultiPrecision<N> ds = u * NearZeroCoef(k);
+            for (int k = 0; k <= max_terms; k += 3) {
+                MultiPrecision<N> ds = u * (NearZeroCoef(k) + x * (NearZeroCoef(k + 1) + x * NearZeroCoef(k + 2)));
                 s += ds;
 
                 if (ds.Exponent <= s.Exponent - MultiPrecision<N>.Bits) {
                     return s;
                 }
 
-                u *= x;
+                u *= x3;
             }
 
             return MultiPrecision<N>.NaN;
