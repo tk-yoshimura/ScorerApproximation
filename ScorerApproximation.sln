@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScorerApproximation", "ScorerApproximation/ScorerApproximation.csproj", "{D59B7999-A61C-433D-BDC4-F65C9C4991DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScorerApproximation", "ScorerApproximation\ScorerApproximation.csproj", "{D59B7999-A61C-433D-BDC4-F65C9C4991DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScorerPade", "ScorerPade\ScorerPade.csproj", "{1B24627C-5429-4D59-86B8-C6BB59809BAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D59B7999-A61C-433D-BDC4-F65C9C4991DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D59B7999-A61C-433D-BDC4-F65C9C4991DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D59B7999-A61C-433D-BDC4-F65C9C4991DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B24627C-5429-4D59-86B8-C6BB59809BAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B24627C-5429-4D59-86B8-C6BB59809BAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B24627C-5429-4D59-86B8-C6BB59809BAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B24627C-5429-4D59-86B8-C6BB59809BAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
