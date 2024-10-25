@@ -6,9 +6,9 @@ namespace BarnesGPade {
     internal class ScorerHi {
         static void Main_() {
 
-            List<(MultiPrecision<Pow2.N32> x, MultiPrecision<Pow2.N32> y)> expecteds = new();
+            List<(MultiPrecision<Pow2.N64> x, MultiPrecision<Pow2.N64> y)> expecteds = new();
 
-            using StreamReader sr = new("../../../../results_disused/scorer_hi_n32_log2.csv");
+            using StreamReader sr = new("../../../../results_disused/scorer_hi_n32.csv");
 
             sr.ReadLine();
             while (!sr.EndOfStream) {
@@ -18,67 +18,100 @@ namespace BarnesGPade {
                 }
 
                 string[] line_split = line.Split(",");
-                MultiPrecision<Pow2.N32> x = line_split[0], y = line_split[1];
+                MultiPrecision<Pow2.N64> x = line_split[0], y = line_split[1];
 
-                expecteds.Add((-x, y));
+                expecteds.Add((x, y));
             }
 
-            using StreamWriter sw_result = new("../../../../results_disused/scorer_hi_e32_pade.csv");
+            List<(MultiPrecision<Pow2.N64> xmin, MultiPrecision<Pow2.N64> xmax, MultiPrecision<Pow2.N64> limit_range)> ranges = [
+                (0, 1, 1d/4096), (1, 2, 1d/4096), (2, 4, 1d/4096), (4, 8, 1d/4096), (8, 16, 1d/4096), (16, 32, 1d/4096), (32, 64, 1d/4096)
+            ];
 
-            foreach ((int xmin, int xmax) in new[] { (0, 1), (1, 2), (2, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 128), (128, 256) }) {
-                List<(MultiPrecision<Pow2.N32> x, MultiPrecision<Pow2.N32> y)> expecteds_range = expecteds.Where(item => item.x >= xmin && item.x <= xmax).ToList();
+            using StreamWriter sw = new("../../../../results_disused/scorer_hi_scaled_pade_table.csv");
 
-                MultiPrecision<Pow2.N32> y0 = expecteds_range.Where(item => item.x == xmin).First().y;
-                Vector<Pow2.N32> xs = expecteds_range.Select(item => item.x - xmin).ToArray(), ys = expecteds_range.Select(item => item.y).ToArray();
+            bool approximate(MultiPrecision<Pow2.N64> xmin, MultiPrecision<Pow2.N64> xmax) {
+                Console.WriteLine($"[{xmin}, {xmax}]");
 
-                for (int m = 4; m <= 32; m++) {
-                    PadeFitter<Pow2.N32> pade = new(xs, ys, m, m, intercept: y0);
+                List<(MultiPrecision<Pow2.N64> x, MultiPrecision<Pow2.N64> y)> expecteds_range =
+                    expecteds.Where(item => item.x >= xmin && item.x <= xmax).ToList();
 
-                    Vector<Pow2.N32> param = pade.ExecuteFitting();
-                    Vector<Pow2.N32> errs = pade.Error(param);
+                Vector<Pow2.N64> xs = expecteds_range.Select(item => item.x).ToArray();
+                Vector<Pow2.N64> ys = expecteds_range.Select(item => item.y).ToArray();
 
-                    MultiPrecision<Pow2.N32> max_rateerr = 0;
-                    for (int i = 0; i < errs.Dim; i++) {
-                        if (ys[i] == 0) {
-                            continue;
+                if (xmin >= 2) {
+                    ys *= xs;
+                }
+
+                xs -= xmin;
+
+                SumTable<Pow2.N64> sum_table = new(xs, ys);
+
+                for (int coefs = 5; coefs <= 72; coefs++) {
+                    foreach ((int m, int n) in CurveFittingUtils.EnumeratePadeDegree(coefs, 1)) {
+                        PadeFitter<Pow2.N64> pade = new(sum_table, m, n);
+
+                        Vector<Pow2.N64> param = pade.Fit();
+                        Vector<Pow2.N64> errs = pade.Error(param);
+
+                        MultiPrecision<Pow2.N64> max_rateerr = CurveFittingUtils.MaxRelativeError(ys, pade.Regress(xs, param));
+
+                        Console.WriteLine($"m={m},n={n}");
+                        Console.WriteLine($"{max_rateerr:e20}");
+
+                        if (max_rateerr > "1e-22") {
+                            coefs += 4;
+                            break;
                         }
 
-                        max_rateerr = MultiPrecision<Pow2.N32>.Max(MultiPrecision<Pow2.N32>.Abs(errs[i] / ys[i]), max_rateerr);
-                    }
-
-                    Console.WriteLine($"m={m},n={m}");
-                    Console.WriteLine($"{max_rateerr:e20}");
-
-                    if (max_rateerr < 2e-32) {
-                        sw_result.WriteLine($"x=[{xmin},{xmax}]");
-                        sw_result.WriteLine($"m={m},n={m}");
-                        sw_result.WriteLine("numer");
-                        foreach (var (_, val) in param[..m]) {
-                            sw_result.WriteLine(val);
-                        }
-                        sw_result.WriteLine("denom");
-                        foreach (var (_, val) in param[m..]) {
-                            sw_result.WriteLine(val);
-                        }
-                        sw_result.WriteLine("hexcode");
-                        for (int i = 0; i < m; i++) {
-                            sw_result.WriteLine($"({ToFP128(param[i])}, {ToFP128(param[i + m])}),");
+                        if (max_rateerr < "1e-40") {
+                            return false;
                         }
 
-                        sw_result.WriteLine("relative err");
-                        sw_result.WriteLine($"{max_rateerr:e20}");
-                        sw_result.Flush();
+                        if (max_rateerr < "1e-31" &&
+                            !CurveFittingUtils.HasLossDigitsPolynomialCoef(param[..m], 0, xmax - xmin) &&
+                            !CurveFittingUtils.HasLossDigitsPolynomialCoef(param[m..], 0, xmax - xmin)) {
 
-                        break;
+                            sw.WriteLine($"x=[{xmin},{xmax}]");
+                            sw.WriteLine($"samples={expecteds_range.Count}");
+                            sw.WriteLine($"m={m},n={n}");
+                            sw.WriteLine("numer");
+                            foreach (var (_, val) in param[..m]) {
+                                sw.WriteLine($"{val:e38}");
+                            }
+                            sw.WriteLine("denom");
+                            foreach (var (_, val) in param[m..]) {
+                                sw.WriteLine($"{val:e38}");
+                            }
+
+                            sw.WriteLine("coef");
+                            foreach ((var numer, var denom) in CurveFittingUtils.EnumeratePadeCoef(param, m, n)) {
+                                sw.WriteLine($"({ToFP128(numer)}, {ToFP128(denom)}),");
+                            }
+
+                            sw.WriteLine("relative err");
+                            sw.WriteLine($"{max_rateerr:e20}");
+                            sw.Flush();
+
+                            return true;
+                        }
                     }
                 }
+
+                return false;
+            }
+
+            Segmenter<Pow2.N64> segmenter = new(ranges, approximate);
+            segmenter.Execute();
+
+            foreach ((var xmin, var xmax, bool is_successs) in segmenter.ApproximatedRanges) {
+                sw.WriteLine($"[{xmin},{xmax}],{(is_successs ? "OK" : "NG")}");
             }
 
             Console.WriteLine("END");
             Console.Read();
         }
 
-        public static string ToFP128(MultiPrecision<Pow2.N32> x) {
+        public static string ToFP128(MultiPrecision<Pow2.N64> x) {
             Sign sign = x.Sign;
             long exponent = x.Exponent;
             uint[] mantissa = x.Mantissa.Reverse().ToArray();
